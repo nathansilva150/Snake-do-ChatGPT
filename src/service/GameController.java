@@ -15,6 +15,7 @@ public class GameController {
 
 	private SoundPlayer sound = new SoundPlayer();
 	private ScoreManager scoreManager = new ScoreManager();
+	private SoundService soundService = new SoundService();
 
 	public GameController() {
 		game = new SnakeGame();
@@ -65,7 +66,7 @@ public class GameController {
 
 	        // Som de comer
 	        if (game.getScore() > oldScore) {
-	            sound.play("C:/Users/nathan_silva150/Music/eat.wav");
+	        	soundService.playEatSound();
 	        }
 
 	        // Game over
@@ -73,7 +74,7 @@ public class GameController {
 	            gameOverExecuted = true; // impede repetir
 	            timer.stop(); // PARA o loop do jogo
 
-	            sound.play("C:/Users/nathan_silva150/Music/gameover.wav");
+	            soundService.playGameOverSound();
 	            String name = JOptionPane.showInputDialog(frame, "Digite seu nome:", "Novo Recorde", JOptionPane.PLAIN_MESSAGE);
 
 	         // se cancelar ou deixar vazio → usa "Jogador"
