@@ -11,10 +11,13 @@ public class SnakeGame {
     private LinkedList<int[]> snake = new LinkedList<>();
     private Direction direction = Direction.RIGHT;
     private Direction nextDirection = null;
+    private boolean poisonMode = false;
+    
+    private boolean directionLocked = false;
 
-    private boolean directionLocked = false;   // <-- impede 2 inputs no mesmo frame
+    private int[] fruit;            // fruta normal
+    private int[] poisonFruit;      // fruta envenenada
 
-    private int[] fruit;
     private boolean gameOver = false;
     private int score = 0;
 
@@ -23,48 +26,54 @@ public class SnakeGame {
     public SnakeGame() {
         snake.add(new int[]{12, 12});
         spawnFruit();
+
+        if (poisonMode) {
+            spawnPoisonFruit();
+        }
+    }
+    
+    public void setPoisonMode(boolean enabled) {
+        this.poisonMode = enabled;
+    }
+
+    public boolean isPoisonMode() {
+        return poisonMode;
     }
 
     // ============================
-    //      DIREÇÃO DO JOGADOR
+    // DIREÇÃO
     // ============================
 
     public void changeDirection(Direction newDir) {
-
-        // impede 2 mudanças de direção no mesmo frame
         if (directionLocked) return;
 
         Direction base = (nextDirection != null) ? nextDirection : direction;
 
-        // evita reversões diretas
-        if ((base == Direction.UP    && newDir == Direction.DOWN) ||
-            (base == Direction.DOWN  && newDir == Direction.UP) ||
-            (base == Direction.LEFT  && newDir == Direction.RIGHT) ||
+        if ((base == Direction.UP && newDir == Direction.DOWN) ||
+            (base == Direction.DOWN && newDir == Direction.UP) ||
+            (base == Direction.LEFT && newDir == Direction.RIGHT) ||
             (base == Direction.RIGHT && newDir == Direction.LEFT)) {
             return;
         }
 
         nextDirection = newDir;
-        directionLocked = true; // <-- trava até o próximo update()
+        directionLocked = true;
     }
 
     // ============================
-    //            UPDATE
+    // UPDATE
     // ============================
 
     public void update() {
         if (gameOver) return;
 
-        // libera o input novamente (1 por frame)
         directionLocked = false;
 
-        // aplica a direção pendente
         if (nextDirection != null) {
             direction = nextDirection;
             nextDirection = null;
         }
 
-        // posição atual da cabeça
         int[] head = snake.getFirst();
         int x = head[0];
         int y = head[1];
@@ -76,49 +85,64 @@ public class SnakeGame {
             case RIGHT: y++; break;
         }
 
-        // nova posição da cabeça
         int[] newHead = new int[]{x, y};
 
-        // ============================
-        //       COLISÃO COM PAREDE
-        // ============================
+        // colisão parede
         if (x < 0 || x >= rows || y < 0 || y >= cols) {
             gameOver = true;
             return;
         }
 
-        // ============================
-        //     COLISÃO COMPRÓPRIO CORPO
-        // ============================
-        for (int i = 0; i < snake.size(); i++) {
-            int[] part = snake.get(i);
+        // colisão corpo
+        for (int[] part : snake) {
             if (part[0] == newHead[0] && part[1] == newHead[1]) {
                 gameOver = true;
                 return;
             }
         }
 
-        // ============================
-        //           MOVER
-        // ============================
         snake.addFirst(newHead);
 
-        // ============================
-        //          COMER FRUTA
-        // ============================
+     // COME FRUTA NORMAL
         if (newHead[0] == fruit[0] && newHead[1] == fruit[1]) {
             score++;
             spawnFruit();
-        } else {
-            snake.removeLast(); // movimento normal
+
+            if (poisonMode) {
+                spawnPoisonFruit();
+            }
+            return;
         }
+
+        // ========================
+        // COME FRUTA ENVENENADA
+        // ========================
+     // Come fruta venenosa (somente se modo estiver ativo)
+        if (poisonMode && poisonFruit != null &&
+            newHead[0] == poisonFruit[0] &&
+            newHead[1] == poisonFruit[1]) {
+
+            gameOver = true;
+            return;
+        }
+
+        // movimento normal
+        snake.removeLast();
     }
 
     // ============================
-    //       FRUTA SEGURA
+    // FRUTAS
     // ============================
 
     private void spawnFruit() {
+        fruit = generateFreePosition();
+    }
+
+    private void spawnPoisonFruit() {
+        poisonFruit = generateFreePosition();
+    }
+
+    private int[] generateFreePosition() {
         while (true) {
             int fx = random.nextInt(rows);
             int fy = random.nextInt(cols);
@@ -132,18 +156,22 @@ public class SnakeGame {
             }
 
             if (!insideSnake) {
-                fruit = new int[]{fx, fy};
-                return;
+                // não deixa cair em cima da fruta normal (apenas por segurança)
+                if (fruit != null && fruit[0] == fx && fruit[1] == fy)
+                    continue;
+
+                return new int[]{fx, fy};
             }
         }
     }
 
     // ============================
-    //           GETTERS
+    // GETTERS
     // ============================
 
     public LinkedList<int[]> getSnake() { return snake; }
     public int[] getFruit() { return fruit; }
+    public int[] getPoisonFruit() { return poisonFruit; }
     public boolean isGameOver() { return gameOver; }
     public int getScore() { return score; }
     public int getRows() { return rows; }

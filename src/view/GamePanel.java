@@ -22,10 +22,20 @@ public class GamePanel extends JPanel {
         int cellWidth = getWidth() / game.getCols();
         int cellHeight = getHeight() / game.getRows();
 
-        // fruta
+     // fruta normal
         g.setColor(Color.RED);
         int[] fruit = game.getFruit();
         g.fillOval(fruit[1] * cellWidth, fruit[0] * cellHeight, cellWidth, cellHeight);
+
+        // fruta envenenada — vermelho mais escuro
+        g.setColor(new Color(180, 0, 0));  
+     // desenha fruta venenosa SOMENTE se o modo estiver ativo
+        if (game.isPoisonMode() && game.getPoisonFruit() != null) {
+            g.setColor(new Color(180, 0, 0)); // vermelho mais escuro
+            int[] poison = game.getPoisonFruit();
+            g.fillOval(poison[1] * cellWidth, poison[0] * cellHeight, cellWidth, cellHeight);
+        }
+        
 
         // cobra
         g.setColor(Color.GREEN);
